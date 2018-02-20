@@ -22,7 +22,7 @@ var (
 	PORT               int    = DEFAULT_PORT
 	HTML_TEMPLATE_FILE string = DEFAULT_HTML_TEMPLATE_FILE_FILE
 	HTML_TEMPLATE_NAME string = ""
-	templates          *template.Template
+	TEMPLATES          *template.Template
 )
 
 type Page struct {
@@ -58,7 +58,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
-	err := templates.ExecuteTemplate(w, tmpl+".html", p)
+	err := TEMPLATES.ExecuteTemplate(w, tmpl+".html", p)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -70,7 +70,7 @@ func init() {
 	flag.StringVar(&HTML_TEMPLATE_FILE, "t", DEFAULT_HTML_TEMPLATE_FILE_FILE, "Html template")
 	flag.Parse()
 
-	templates = template.Must(template.ParseFiles(HTML_TEMPLATE_FILE))
+	TEMPLATES = template.Must(template.ParseFiles(HTML_TEMPLATE_FILE))
 	HTML_TEMPLATE_NAME = strings.Replace(HTML_TEMPLATE_FILE, ".html", "", -1)
 }
 
