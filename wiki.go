@@ -3,23 +3,26 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/russross/blackfriday"
 	"html/template"
 	"io/ioutil"
 	"net/http"
+	"strings"
+
+	"github.com/russross/blackfriday"
 )
 
 const (
-	DEFAULT_CONTENT_DIRECTORY string = "content"
-	DEFAULT_PORT              int    = 1337
-	DEFAULT_HTML_TEMPLATE     string = "view.html"
+	DEFAULT_CONTENT_DIRECTORY       string = "content"
+	DEFAULT_PORT                    int    = 1337
+	DEFAULT_HTML_TEMPLATE_FILE_FILE string = "view.html"
 )
 
 var (
-	CONTENT_DIRECTORY string = DEFAULT_CONTENT_DIRECTORY
-	PORT              int    = DEFAULT_PORT
-	HTML_TEMPLATE     string = DEFAULT_HTML_TEMPLATE
-	templates         *template.Template
+	CONTENT_DIRECTORY  string = DEFAULT_CONTENT_DIRECTORY
+	PORT               int    = DEFAULT_PORT
+	HTML_TEMPLATE_FILE string = DEFAULT_HTML_TEMPLATE_FILE_FILE
+	HTML_TEMPLATE_NAME string = ""
+	templates          *template.Template
 )
 
 type Page struct {
@@ -27,8 +30,12 @@ type Page struct {
 	Body  template.HTML
 }
 
+func getFilename(page string) string {
+	return fmt.Sprintf("%v/%v.md", CONTENT_DIRECTORY, page)
+}
+
 func loadPage(page string) (*Page, error) {
-	filename := "git/" + page + ".md"
+	filename := getFilename(page)
 	body, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
@@ -47,7 +54,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", 301)
 		return
 	}
-	renderTemplate(w, "view", p)
+	renderTemplate(w, HTML_TEMPLATE_NAME, p)
 }
 
 func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
@@ -60,10 +67,11 @@ func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
 func init() {
 	flag.IntVar(&PORT, "p", DEFAULT_PORT, "Server port")
 	flag.StringVar(&CONTENT_DIRECTORY, "C", DEFAULT_CONTENT_DIRECTORY, "Content directory")
-	flag.StringVar(&HTML_TEMPLATE, "t", DEFAULT_HTML_TEMPLATE, "Html template")
+	flag.StringVar(&HTML_TEMPLATE_FILE, "t", DEFAULT_HTML_TEMPLATE_FILE_FILE, "Html template")
 	flag.Parse()
 
-	templates = template.Must(template.ParseFiles(HTML_TEMPLATE))
+	templates = template.Must(template.ParseFiles(HTML_TEMPLATE_FILE))
+	HTML_TEMPLATE_NAME = strings.Replace(HTML_TEMPLATE_FILE, ".html", "", -1)
 }
 
 func main() {
