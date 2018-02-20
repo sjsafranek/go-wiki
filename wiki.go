@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	DEFAULT_CONTENT_DIRECTORY string = "git"
+	DEFAULT_CONTENT_DIRECTORY string = "content"
 	DEFAULT_PORT              int    = 1337
 	DEFAULT_HTML_TEMPLATE     string = "view.html"
 )
@@ -19,7 +19,7 @@ var (
 	CONTENT_DIRECTORY string = DEFAULT_CONTENT_DIRECTORY
 	PORT              int    = DEFAULT_PORT
 	HTML_TEMPLATE     string = DEFAULT_HTML_TEMPLATE
-	templates                = string
+	templates         *template.Template
 )
 
 type Page struct {
@@ -49,8 +49,6 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	renderTemplate(w, "view", p)
 }
-
-// var templates = template.Must(template.ParseFiles(HTML_TEMPLATE))
 
 func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
 	err := templates.ExecuteTemplate(w, tmpl+".html", p)
