@@ -19,6 +19,7 @@ var (
 	CONTENT_DIRECTORY string = DEFAULT_CONTENT_DIRECTORY
 	PORT              int    = DEFAULT_PORT
 	HTML_TEMPLATE     string = DEFAULT_HTML_TEMPLATE
+	templates                = string
 )
 
 type Page struct {
@@ -49,7 +50,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "view", p)
 }
 
-var templates = template.Must(template.ParseFiles(HTML_TEMPLATE))
+// var templates = template.Must(template.ParseFiles(HTML_TEMPLATE))
 
 func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
 	err := templates.ExecuteTemplate(w, tmpl+".html", p)
@@ -63,6 +64,8 @@ func init() {
 	flag.StringVar(&CONTENT_DIRECTORY, "C", DEFAULT_CONTENT_DIRECTORY, "Content directory")
 	flag.StringVar(&HTML_TEMPLATE, "t", DEFAULT_HTML_TEMPLATE, "Html template")
 	flag.Parse()
+
+	templates = template.Must(template.ParseFiles(HTML_TEMPLATE))
 }
 
 func main() {
