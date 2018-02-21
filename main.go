@@ -8,6 +8,15 @@ import (
 	"strings"
 )
 
+const (
+	DEFAULT_PORT int = 1337
+)
+
+var (
+	PORT  int = DEFAULT_PORT
+	USERS Users
+)
+
 func init() {
 	flag.IntVar(&PORT, "p", DEFAULT_PORT, "Server port")
 	flag.StringVar(&CONTENT_DIRECTORY, "C", DEFAULT_CONTENT_DIRECTORY, "Content directory")
