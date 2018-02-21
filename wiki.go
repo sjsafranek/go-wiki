@@ -78,25 +78,30 @@ func (self *WikiEngine) renderTemplate(w http.ResponseWriter, tmpl string, p *Pa
 	}
 }
 
+// User: user for wiki engine
 type User struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
+// SetPassword sets password
 func (self *User) SetPassword(password string) {
 	self.Password = utils.SHA512FromBytes([]byte(password))
 }
 
+// IsPassword checks if password is the set password
 func (self *User) IsPassword(password string) bool {
 	return self.Password == utils.SHA512FromBytes([]byte(password))
 }
 
+// Users: collection of users
 type Users struct {
+	// users
 	Users []*User `json:"users"`
 }
 
-// Fetch: fetches json file containing db4iot datasource schema.
-// @args file{string}	schema file
+// Fetch: fetches json file containing users array.
+// @args file{string}	users file
 func (self *Users) Fetch(file string) error {
 	b, err := ioutil.ReadFile(file)
 	if nil != err {
@@ -105,7 +110,7 @@ func (self *Users) Fetch(file string) error {
 	return self.Unmarshal(string(b))
 }
 
-// Save: saves schema to json file
+// Save: saves users to json file
 func (self *Users) Save(file string) error {
 	contents, err := self.Marshal()
 	if nil != err {
@@ -132,6 +137,7 @@ func (self Users) Marshal() (string, error) {
 	return string(b), nil
 }
 
+// Get user by username
 func (self *Users) Get(username string) (*User, error) {
 	for _, user := range self.Users {
 		if username == user.Username {
@@ -141,11 +147,13 @@ func (self *Users) Get(username string) (*User, error) {
 	return &User{}, errors.New("User not found")
 }
 
+// Has has user with username
 func (self *Users) Has(username string) bool {
 	_, err := self.Get(username)
 	return err == nil
 }
 
+// Add user to users
 func (self *Users) Add(user *User) error {
 	if !self.Has(user.Username) {
 		self.Users = append(self.Users, user)
@@ -170,11 +178,13 @@ func init() {
 	USERS.Add(&user)
 	user.SetPassword("dev")
 	USERS.Save("users.json")
+	//.end
 
 }
 
 func main() {
 	// http://www.alexedwards.net/blog/a-recap-of-request-handling
+
 	wiki := &WikiEngine{}
 	// http.Handle("/wiki/", http.StripPrefix("/wiki", wiki))
 	http.Handle("/", wiki)
@@ -185,7 +195,6 @@ func main() {
 
 	fmt.Printf("Magic happens on port %v...\n", PORT)
 	err := http.ListenAndServe(fmt.Sprintf(":%v", PORT), nil)
-	// err := http.ListenAndServe(fmt.Sprintf(":%v", PORT), mux)
 	if nil != err {
 		panic(err)
 	}
