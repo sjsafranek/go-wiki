@@ -5,6 +5,9 @@ import (
 	"errors"
 	"io/ioutil"
 
+	"compress/gzip"
+	"os"
+
 	"./utils"
 )
 
@@ -26,7 +29,7 @@ func (self *User) IsPassword(password string) bool {
 
 // Users: collection of users
 type Users struct {
-	// users
+	// Filename string
 	Users []*User `json:"users"`
 }
 
@@ -89,5 +92,42 @@ func (self *Users) Add(user *User) error {
 		self.Users = append(self.Users, user)
 		return nil
 	}
+
 	return errors.New("User already exists")
+}
+
+func (self *Users) SaveGzip() error {
+	f, err := os.Create("users.json.gz")
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	w := gzip.NewWriter(f)
+	defer w.Close()
+	enc := json.NewEncoder(w)
+	enc.SetIndent("", " ")
+	return enc.Encode(self.Users)
+}
+
+func (self *Users) LoadGzip() error {
+	var err error
+	f, err := os.Open("users.json.gz")
+	defer f.Close()
+	if err != nil {
+		return err
+	}
+
+	reader, err := gzip.NewReader(f)
+	if err != nil {
+		return err
+	}
+	defer reader.Close()
+
+	err = json.NewDecoder(reader).Decode(self.Users)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -21,6 +21,7 @@ func init() {
 	flag.IntVar(&PORT, "p", DEFAULT_PORT, "Server port")
 	flag.StringVar(&CONTENT_DIRECTORY, "C", DEFAULT_CONTENT_DIRECTORY, "Content directory")
 	flag.StringVar(&HTML_TEMPLATE_FILE, "t", DEFAULT_HTML_TEMPLATE_FILE_FILE, "Html template")
+	// flag.StringVar(p, name, value, usage)
 	flag.Parse()
 
 	TEMPLATES = template.Must(template.ParseFiles(HTML_TEMPLATE_FILE))
@@ -34,6 +35,9 @@ func init() {
 	user.SetPassword("dev")
 	USERS.Save("users.json")
 	//.end
+
+	// USERS.LoadGzip()
+	// USERS.SaveGzip()
 
 }
 
