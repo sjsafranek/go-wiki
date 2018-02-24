@@ -1,14 +1,10 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
-	"io/ioutil"
-
-	"compress/gzip"
-	"os"
 
 	"./utils"
+	"./utils/jsonhelpers"
 )
 
 // User: user for wiki engine
@@ -36,38 +32,26 @@ type Users struct {
 // Fetch: fetches json file containing users array.
 // @args file{string}	users file
 func (self *Users) Fetch(file string) error {
-	b, err := ioutil.ReadFile(file)
-	if nil != err {
-		return err
-	}
-	return self.Unmarshal(string(b))
+	return jsonhelpers.Fetch(file, self)
 }
 
 // Save: saves users to json file
 func (self *Users) Save(file string) error {
-	contents, err := self.Marshal()
-	if nil != err {
-		return err
-	}
-	return ioutil.WriteFile(file, []byte(contents), 0644)
+	return jsonhelpers.Save(file, self)
 }
 
 // Unmarshal: json unmarshals string to struct
 // @args string
 // @return error
 func (self *Users) Unmarshal(data string) error {
-	return json.Unmarshal([]byte(data), self)
+	return jsonhelpers.Unmarshal(data, self)
 }
 
 // Marshal: json marshals struct
 // @return string
 // @return error
 func (self Users) Marshal() (string, error) {
-	b, err := json.Marshal(self)
-	if nil != err {
-		return "", err
-	}
-	return string(b), nil
+	return jsonhelpers.Marshal(self)
 }
 
 // Get user by username
@@ -94,40 +78,4 @@ func (self *Users) Add(user *User) error {
 	}
 
 	return errors.New("User already exists")
-}
-
-func (self *Users) SaveGzip() error {
-	f, err := os.Create("users.json.gz")
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	w := gzip.NewWriter(f)
-	defer w.Close()
-	enc := json.NewEncoder(w)
-	enc.SetIndent("", " ")
-	return enc.Encode(self.Users)
-}
-
-func (self *Users) LoadGzip() error {
-	var err error
-	f, err := os.Open("users.json.gz")
-	defer f.Close()
-	if err != nil {
-		return err
-	}
-
-	reader, err := gzip.NewReader(f)
-	if err != nil {
-		return err
-	}
-	defer reader.Close()
-
-	err = json.NewDecoder(reader).Decode(self.Users)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
