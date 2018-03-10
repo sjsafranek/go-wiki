@@ -51,8 +51,7 @@ func (self *WikiEngine) loadPage(page string) (*Page, error) {
 func (self *WikiEngine) viewHandler(w http.ResponseWriter, r *http.Request) {
 	page := r.URL.Path[1:]
 	if len(page) == 0 {
-		self.renderTemplate(w, HTML_TEMPLATE_NAME, &Page{})
-		return
+		page = "index"
 	}
 	p, err := self.loadPage(page)
 	if err != nil {

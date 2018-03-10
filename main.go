@@ -9,17 +9,20 @@ import (
 )
 
 const (
-	DEFAULT_PORT int = 1337
+	DEFAULT_PORT          int    = 1337
+	DEFAULT_IMG_DIRECTORY string = "img"
 )
 
 var (
-	PORT  int = DEFAULT_PORT
-	USERS Users
+	PORT          int = DEFAULT_PORT
+	USERS         Users
+	IMG_DIRECTORY string = DEFAULT_IMG_DIRECTORY
 )
 
 func init() {
 	flag.IntVar(&PORT, "p", DEFAULT_PORT, "Server port")
 	flag.StringVar(&CONTENT_DIRECTORY, "C", DEFAULT_CONTENT_DIRECTORY, "Content directory")
+	flag.StringVar(&IMG_DIRECTORY, "i", DEFAULT_IMG_DIRECTORY, "Image directory")
 	flag.StringVar(&HTML_TEMPLATE_FILE, "t", DEFAULT_HTML_TEMPLATE_FILE_FILE, "Html template")
 	// flag.StringVar(p, name, value, usage)
 	flag.Parse()
@@ -35,10 +38,6 @@ func init() {
 	user.SetPassword("dev")
 	USERS.Save("users.json")
 	//.end
-
-	// USERS.LoadGzip()
-	// USERS.SaveGzip()
-
 }
 
 func main() {
@@ -49,8 +48,9 @@ func main() {
 	http.Handle("/", wiki)
 
 	// Static Files
-	fs := http.FileServer(http.Dir("img"))
-	http.Handle("/img/", http.StripPrefix("/img/", fs))
+	fs := http.FileServer(http.Dir(IMG_DIRECTORY))
+	img_route := fmt.Sprintf("/%v/", IMG_DIRECTORY)
+	http.Handle(img_route, http.StripPrefix(img_route, fs))
 
 	fmt.Printf("Magic happens on port %v...\n", PORT)
 	err := http.ListenAndServe(fmt.Sprintf(":%v", PORT), nil)
