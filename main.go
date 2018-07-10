@@ -54,6 +54,9 @@ func main() {
 	http.Handle(img_route, http.StripPrefix(img_route, fs))
 
 	// http.Handle("/static/", http.FileServer(http.Dir("static")))
+	fs_static := http.FileServer(http.Dir("static"))
+	static_route := fmt.Sprintf("/%v/", "static")
+	http.Handle(static_route, http.StripPrefix(static_route, fs_static))
 
 	fmt.Printf("Magic happens on port %v...\n", PORT)
 	err := http.ListenAndServe(fmt.Sprintf(":%v", PORT), nil)

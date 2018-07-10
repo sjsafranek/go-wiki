@@ -134,7 +134,7 @@ func (self *WikiEngine) viewHandler(w http.ResponseWriter, r *http.Request) {
 
 	p, err := self.loadPage(page)
 	if err != nil {
-		self.renderTemplate(w, HTML_TEMPLATE_NAME, &Page{})
+		self.renderTemplate(w, HTML_TEMPLATE_NAME, &Page{Title: page, Sidebar: buildSideBar()})
 		return
 	}
 	self.renderTemplate(w, HTML_TEMPLATE_NAME, p)
