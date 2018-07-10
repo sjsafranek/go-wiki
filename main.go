@@ -45,12 +45,15 @@ func main() {
 
 	wiki := &WikiEngine{}
 	// http.Handle("/wiki/", http.StripPrefix("/wiki", wiki))
+
 	http.Handle("/", wiki)
 
 	// Static Files
 	fs := http.FileServer(http.Dir(IMG_DIRECTORY))
 	img_route := fmt.Sprintf("/%v/", IMG_DIRECTORY)
 	http.Handle(img_route, http.StripPrefix(img_route, fs))
+
+	// http.Handle("/static/", http.FileServer(http.Dir("static")))
 
 	fmt.Printf("Magic happens on port %v...\n", PORT)
 	err := http.ListenAndServe(fmt.Sprintf(":%v", PORT), nil)
