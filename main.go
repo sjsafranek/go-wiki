@@ -11,6 +11,8 @@ import (
 	"github.com/gorilla/mux"
 )
 
+var users_file string
+
 func init() {
 	flag.IntVar(&PORT, "p", DEFAULT_PORT, "Server port")
 	flag.StringVar(&CONTENT_DIRECTORY, "C", DEFAULT_CONTENT_DIRECTORY, "Wiki content directory")
@@ -26,7 +28,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	users_file := fmt.Sprintf("%v/users.json", CONTENT_DIRECTORY)
+	users_file = fmt.Sprintf("%v/users.json", CONTENT_DIRECTORY)
 	USERS = Users{}
 	USERS.Fetch(users_file)
 	user := User{Username: "admin"}
@@ -38,6 +40,8 @@ func init() {
 
 func main() {
 	var err error
+
+	go RunTcpServer()
 
 	router := mux.NewRouter()
 

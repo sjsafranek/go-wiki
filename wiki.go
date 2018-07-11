@@ -114,6 +114,10 @@ func (self *WikiEngine) ViewHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		fmt.Fprintf(w, string(`{"status":"ok"}`))
 		return
+	} else if "DELETE" == r.Method {
+		// TODO
+		//  - delete page
+		logger.Critical("TODO")
 	}
 
 	p, err := self.loadPage(page)
