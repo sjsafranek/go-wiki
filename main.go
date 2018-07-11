@@ -7,23 +7,13 @@ import (
 	"net/http"
 	"os"
 	"strings"
-)
 
-const (
-	DEFAULT_PORT          int    = 1337
-	DEFAULT_IMG_DIRECTORY string = "img"
-)
-
-var (
-	PORT          int = DEFAULT_PORT
-	USERS         Users
-	IMG_DIRECTORY string = DEFAULT_IMG_DIRECTORY
+	"github.com/gorilla/mux"
 )
 
 func init() {
 	flag.IntVar(&PORT, "p", DEFAULT_PORT, "Server port")
-	flag.StringVar(&CONTENT_DIRECTORY, "C", DEFAULT_CONTENT_DIRECTORY, "Content directory")
-	// flag.StringVar(&IMG_DIRECTORY, "i", DEFAULT_IMG_DIRECTORY, "Image directory")
+	flag.StringVar(&CONTENT_DIRECTORY, "C", DEFAULT_CONTENT_DIRECTORY, "Wiki content directory")
 	flag.StringVar(&HTML_TEMPLATE_FILE, "t", DEFAULT_HTML_TEMPLATE_FILE_FILE, "Html template")
 	// flag.StringVar(p, name, value, usage)
 	flag.Parse()
@@ -49,27 +39,39 @@ func init() {
 func main() {
 	var err error
 
+	router := mux.NewRouter()
+
 	// http://www.alexedwards.net/blog/a-recap-of-request-handling
 
-	wiki := &WikiEngine{}
-	// http.Handle("/wiki/", http.StripPrefix("/wiki", wiki))
+	// TODO
+	//  - Create util function for this
+	// Static Files
+	IMG_DIRECTORY := fmt.Sprintf("%v/img/", CONTENT_DIRECTORY)
+	err = os.MkdirAll(IMG_DIRECTORY, os.ModePerm)
+	if err != nil {
+		panic(err)
+	}
+	router.PathPrefix("/img/").Handler(
+		http.StripPrefix("/img/", http.FileServer(
+			http.Dir(IMG_DIRECTORY))))
+	//.end
 
+	auth := AuthenticationMiddleware{}
+	auth.Populate()
+	router.HandleFunc("/login", auth.LoginHandler).Methods("GET", "POST")
+	router.HandleFunc("/logout", auth.LogoutHandler).Methods("GET")
+
+	// wiki engine
+	wiki := &WikiEngine{}
 	WIKI_DIRECTORY = fmt.Sprintf("%v/wiki/", CONTENT_DIRECTORY)
 	err = os.MkdirAll(WIKI_DIRECTORY, os.ModePerm)
 	if err != nil {
 		panic(err)
 	}
+	router.PathPrefix("/").Handler(wiki)
+	//.end
 
-	http.Handle("/", wiki)
-
-	// Static Files
-	IMG_DIRECTORY = fmt.Sprintf("%v/img/", CONTENT_DIRECTORY)
-	err = os.MkdirAll(IMG_DIRECTORY, os.ModePerm)
-	if err != nil {
-		panic(err)
-	}
-	fs_image := http.FileServer(http.Dir(IMG_DIRECTORY))
-	http.Handle("/img/", http.StripPrefix("/img/", fs_image))
+	router.Use(auth.Middleware)
 
 	// http.Handle("/static/", http.FileServer(http.Dir("static")))
 	// fs_static := http.FileServer(http.Dir("static"))
@@ -77,7 +79,7 @@ func main() {
 	// http.Handle(static_route, http.StripPrefix(static_route, fs_static))
 
 	fmt.Printf("Magic happens on port %v...\n", PORT)
-	err = http.ListenAndServe(fmt.Sprintf(":%v", PORT), nil)
+	err = http.ListenAndServe(fmt.Sprintf(":%v", PORT), MiddleWare(router))
 	if nil != err {
 		panic(err)
 	}

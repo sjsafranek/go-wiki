@@ -5,16 +5,11 @@ import (
 	"fmt"
 	"html/template"
 	"io/ioutil"
-	// "log"
 	"net/http"
+	"os"
 	"strings"
 
-	"os"
-	// "path/filepath"
-
 	"github.com/russross/blackfriday"
-
-	"github.com/sjsafranek/ligneous"
 )
 
 const (
@@ -29,7 +24,6 @@ var (
 	HTML_TEMPLATE_FILE string = DEFAULT_HTML_TEMPLATE_FILE_FILE
 	HTML_TEMPLATE_NAME string = ""
 	TEMPLATES          *template.Template
-	logger             = ligneous.New().Log
 )
 
 type PageNode struct {
@@ -43,12 +37,12 @@ type Page struct {
 	Body    template.HTML
 	Raw     string
 	Sidebar []PageNode
+	Session bool
 }
 
 func getUrlForPage(directory, filename string) string {
 	filename = strings.Replace(filename, ".md", "", -1)
 	path := fmt.Sprintf("%v/%v", directory, filename)
-	// path = strings.Replace(path, CONTENT_DIRECTORY, "", -1)
 	path = strings.Replace(path, WIKI_DIRECTORY, "", -1)
 	return path
 }
@@ -74,23 +68,16 @@ func getDirectoryTree(directory string) []PageNode {
 }
 
 func buildSideBar() []PageNode {
-	// return getDirectoryTree(CONTENT_DIRECTORY)
 	return getDirectoryTree(WIKI_DIRECTORY)
 }
 
 type WikiEngine struct{}
 
 func (self *WikiEngine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// log.Println(r.URL.Path)
-	logger.Infof("%s [%s]", r.URL.Path, r.Method)
-	// TODO:
-	// - add /edit route,
-	// - POST request to create new pages
-	self.viewHandler(w, r)
+	self.ViewHandler(w, r)
 }
 
 func (self *WikiEngine) getFilename(page string) string {
-	// return fmt.Sprintf("%v/%v.md", CONTENT_DIRECTORY, page)
 	return fmt.Sprintf("%v/%v.md", WIKI_DIRECTORY, page)
 }
 
@@ -109,7 +96,9 @@ func (self *WikiEngine) loadPage(page string) (*Page, error) {
 	}, nil
 }
 
-func (self *WikiEngine) viewHandler(w http.ResponseWriter, r *http.Request) {
+func (self *WikiEngine) ViewHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
 	page := r.URL.Path[1:]
 	if len(page) == 0 {
 		page = "index"
@@ -129,9 +118,10 @@ func (self *WikiEngine) viewHandler(w http.ResponseWriter, r *http.Request) {
 
 	p, err := self.loadPage(page)
 	if err != nil {
-		self.renderTemplate(w, HTML_TEMPLATE_NAME, &Page{Title: page, Sidebar: buildSideBar()})
+		self.renderTemplate(w, HTML_TEMPLATE_NAME, &Page{Title: page, Sidebar: buildSideBar(), Session: HasSession(r)})
 		return
 	}
+	p.Session = HasSession(r)
 	self.renderTemplate(w, HTML_TEMPLATE_NAME, p)
 }
 
@@ -146,14 +136,12 @@ func (self *WikiEngine) savePage(page string, r *http.Request) error {
 
 	// create directory tree from path
 	path := fmt.Sprintf("%s/%s", WIKI_DIRECTORY, strings.Join(parts[:len(parts)-1], "/"))
-	// path := fmt.Sprintf("%s/%s", CONTENT_DIRECTORY, strings.Join(parts[:len(parts)-1], "/"))
 	err = os.MkdirAll(path, os.ModePerm)
 	if err != nil {
 		return err
 	}
 
 	// write data to file
-	// out_file := fmt.Sprintf("%s/%s.md", CONTENT_DIRECTORY, strings.Join(parts, "/"))
 	out_file := fmt.Sprintf("%s/%s.md", WIKI_DIRECTORY, strings.Join(parts, "/"))
 	err = ioutil.WriteFile(out_file, []byte(body), 0644)
 	if err != nil {
