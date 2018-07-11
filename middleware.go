@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -73,13 +74,16 @@ func (self *AuthenticationMiddleware) Middleware(next http.Handler) http.Handler
 			// return
 			session, err := store.Get(r, "wiki-session")
 			if nil != err {
-				http.Error(w, err.Error(), http.StatusForbidden)
+				logger.Warn("Not authenticated")
+				// http.Error(w, err.Error(), http.StatusForbidden)
+				http.Redirect(w, r, "/login", http.StatusSeeOther)
 				return
 			}
 
 			if nil == session.Values["loggedin"] {
 				logger.Warn("Not authenticated")
-				http.Error(w, "Forbidden", http.StatusForbidden)
+				// http.Error(w, "Forbidden", http.StatusForbidden)
+				http.Redirect(w, r, "/login", http.StatusSeeOther)
 				return
 			}
 			logger.Info("Authenticated")
@@ -89,22 +93,30 @@ func (self *AuthenticationMiddleware) Middleware(next http.Handler) http.Handler
 	})
 }
 
+func (self *AuthenticationMiddleware) loginTemplate(err error) string {
+	err_msg := ""
+	if nil != err {
+		err_msg = err.Error()
+	}
+	return `<!DOCTYPE html>
+				<html>
+					<head></head>
+					<body>
+						<h3>Login</h3>
+						<form action="/login" method="POST">
+							Username: <input type="text" placeholder="username" name="username"><br>
+							Password: <input type="password" name="password"><br>
+							<input type="submit" value="Login">
+							<div>` + err_msg + `</div>
+						</form>
+					<body>
+				</html>`
+}
+
 func (self *AuthenticationMiddleware) LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	if "GET" == r.Method {
-		fmt.Fprintf(w, `
-			<!DOCTYPE html>
-			<html>
-				<head></head>
-				<body>
-					<form action="/login" method="POST">
-						Username: <input type="text" placeholder="username" name="username"><br>
-						Password: <input type="password" name="password"><br>
-						<input type="submit" value="Login">
-					</form>
-				<body>
-			</html>
-		`)
+		fmt.Fprintf(w, self.loginTemplate(nil))
 		return
 	}
 
@@ -118,40 +130,15 @@ func (self *AuthenticationMiddleware) LoginHandler(w http.ResponseWriter, r *htt
 	password := r.Form["password"][0]
 	user, err := USERS.Get(username)
 	if nil != err {
-		// http.Error(w, err.Error(), http.StatusNotFound)
-		fmt.Fprintf(w, `
-			<!DOCTYPE html>
-			<html>
-				<head></head>
-				<body>
-					<form action="/login" method="POST">
-						Username: <input type="text" placeholder="username" name="username"><br>
-						Password: <input type="password" name="password"><br>
-						<input type="submit" value="Login">
-						<div>`+err.Error()+`</div>
-					</form>
-				<body>
-			</html>
-		`)
+		logger.Warn(err)
+		fmt.Fprintf(w, self.loginTemplate(err))
 		return
 	}
 
 	if !user.IsPassword(password) {
-		// http.Error(w, "Forbidden", http.StatusForbidden)
-		fmt.Fprintf(w, `
-			<!DOCTYPE html>
-			<html>
-				<head></head>
-				<body>
-					<form action="/login" method="POST">
-						Username: <input type="text" placeholder="username" name="username"><br>
-						Password: <input type="password" name="password"><br>
-						<input type="submit" value="Login">
-						<div>Forbidden</div>
-					</form>
-				<body>
-			</html>
-		`)
+		err = errors.New("Incorrect password")
+		logger.Warn(err)
+		fmt.Fprintf(w, self.loginTemplate(err))
 		return
 	}
 
@@ -160,8 +147,10 @@ func (self *AuthenticationMiddleware) LoginHandler(w http.ResponseWriter, r *htt
 	session.Values["loggedin"] = true
 	session.Save(r, w)
 
-	w.Header().Set("Content-Type", "application/json")
-	fmt.Fprintf(w, string(`{"status":"ok"}`))
+	// http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+	// w.Header().Set("Content-Type", "application/json")
+	// fmt.Fprintf(w, string(`{"status":"ok"}`))
 }
 
 func (self *AuthenticationMiddleware) LogoutHandler(w http.ResponseWriter, r *http.Request) {

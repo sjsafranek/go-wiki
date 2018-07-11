@@ -46,7 +46,7 @@ func main() {
 	// TODO
 	//  - Create util function for this
 	// Static Files
-	IMG_DIRECTORY := fmt.Sprintf("%v/img/", CONTENT_DIRECTORY)
+	IMG_DIRECTORY = fmt.Sprintf("%v/img/", CONTENT_DIRECTORY)
 	err = os.MkdirAll(IMG_DIRECTORY, os.ModePerm)
 	if err != nil {
 		panic(err)
@@ -54,6 +54,10 @@ func main() {
 	router.PathPrefix("/img/").Handler(
 		http.StripPrefix("/img/", http.FileServer(
 			http.Dir(IMG_DIRECTORY))))
+	//.end
+
+	// File uploader
+	router.HandleFunc("/upload", FileUploadHandler).Methods("GET", "POST")
 	//.end
 
 	auth := AuthenticationMiddleware{}
