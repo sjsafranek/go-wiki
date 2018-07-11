@@ -18,11 +18,13 @@ import (
 )
 
 const (
+	DEFAULT_WIKI_DIRECTORY          string = "wiki"
 	DEFAULT_CONTENT_DIRECTORY       string = "content"
 	DEFAULT_HTML_TEMPLATE_FILE_FILE string = "view.html"
 )
 
 var (
+	WIKI_DIRECTORY     string = DEFAULT_WIKI_DIRECTORY
 	CONTENT_DIRECTORY  string = DEFAULT_CONTENT_DIRECTORY
 	HTML_TEMPLATE_FILE string = DEFAULT_HTML_TEMPLATE_FILE_FILE
 	HTML_TEMPLATE_NAME string = ""
@@ -46,7 +48,8 @@ type Page struct {
 func getUrlForPage(directory, filename string) string {
 	filename = strings.Replace(filename, ".md", "", -1)
 	path := fmt.Sprintf("%v/%v", directory, filename)
-	path = strings.Replace(path, CONTENT_DIRECTORY, "", -1)
+	// path = strings.Replace(path, CONTENT_DIRECTORY, "", -1)
+	path = strings.Replace(path, WIKI_DIRECTORY, "", -1)
 	return path
 }
 
@@ -71,17 +74,8 @@ func getDirectoryTree(directory string) []PageNode {
 }
 
 func buildSideBar() []PageNode {
-	// tree := []Node{}
-	// err := filepath.Walk(CONTENT_DIRECTORY, func(path string, f os.FileInfo, err error) error {
-	// 	fmt.Printf("Visited: %s %s %s\n", path, f.IsDir(), f.Name())
-	//
-	// 	return nil
-	// })
-	// if nil != err {
-	// 	fmt.Println(err)
-	// }
-
-	return getDirectoryTree(CONTENT_DIRECTORY)
+	// return getDirectoryTree(CONTENT_DIRECTORY)
+	return getDirectoryTree(WIKI_DIRECTORY)
 }
 
 type WikiEngine struct{}
@@ -96,7 +90,8 @@ func (self *WikiEngine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (self *WikiEngine) getFilename(page string) string {
-	return fmt.Sprintf("%v/%v.md", CONTENT_DIRECTORY, page)
+	// return fmt.Sprintf("%v/%v.md", CONTENT_DIRECTORY, page)
+	return fmt.Sprintf("%v/%v.md", WIKI_DIRECTORY, page)
 }
 
 func (self *WikiEngine) loadPage(page string) (*Page, error) {
@@ -150,14 +145,16 @@ func (self *WikiEngine) savePage(page string, r *http.Request) error {
 	parts := strings.Split(page, "/")
 
 	// create directory tree from path
-	path := fmt.Sprintf("%s/%s", CONTENT_DIRECTORY, strings.Join(parts[:len(parts)-1], "/"))
+	path := fmt.Sprintf("%s/%s", WIKI_DIRECTORY, strings.Join(parts[:len(parts)-1], "/"))
+	// path := fmt.Sprintf("%s/%s", CONTENT_DIRECTORY, strings.Join(parts[:len(parts)-1], "/"))
 	err = os.MkdirAll(path, os.ModePerm)
 	if err != nil {
 		return err
 	}
 
 	// write data to file
-	out_file := fmt.Sprintf("%s/%s.md", CONTENT_DIRECTORY, strings.Join(parts, "/"))
+	// out_file := fmt.Sprintf("%s/%s.md", CONTENT_DIRECTORY, strings.Join(parts, "/"))
+	out_file := fmt.Sprintf("%s/%s.md", WIKI_DIRECTORY, strings.Join(parts, "/"))
 	err = ioutil.WriteFile(out_file, []byte(body), 0644)
 	if err != nil {
 		return err

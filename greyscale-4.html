@@ -161,6 +161,10 @@
             padding-left: 14px;
             font-size: 1.1em;
             display: block;
+
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
         }
 
         a[data-toggle="collapse"] {
@@ -323,13 +327,15 @@
                     "href": "#" + _id,
                     "data-toggle":"collapse",
                     "aria-expanded": "false",
-                    "path": content.path
+                    "path": content.path,
+                    "title": content.name
                 })
                 .addClass("dropdown-toggle");
             } else {
                 link = $("<a>", {
                     "href": content.path,
-                    "target": "_blank"
+                    "target": "_blank",
+                    "title": content.name
                 })
             }
 
