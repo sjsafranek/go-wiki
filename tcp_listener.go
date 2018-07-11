@@ -59,10 +59,7 @@ func RunTcpServer() {
 		logger.Info(data)
 
 		// set user
-		user := User{Username: data["username"]}
-		user.SetPassword(data["password"])
-		USERS.Add(&user)
-		USERS.Save(users_file)
+		Sessions.CreateUser(data["username"], data["password"])
 
 		results := make(map[string]interface{})
 		TCP_SERVER.SendResponseFromStruct(results, conn)

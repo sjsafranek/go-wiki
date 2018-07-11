@@ -22,20 +22,6 @@ func init() {
 
 	TEMPLATES = template.Must(template.ParseFiles(HTML_TEMPLATE_FILE))
 	HTML_TEMPLATE_NAME = strings.Replace(HTML_TEMPLATE_FILE, ".html", "", -1)
-
-	// set wiki users
-	err := os.MkdirAll(CONTENT_DIRECTORY, os.ModePerm)
-	if err != nil {
-		panic(err)
-	}
-	users_file = fmt.Sprintf("%v/users.json", CONTENT_DIRECTORY)
-	USERS = Users{}
-	USERS.Fetch(users_file)
-	user := User{Username: "admin"}
-	USERS.Add(&user)
-	user.SetPassword("dev")
-	USERS.Save(users_file)
-	//.end
 }
 
 func main() {
@@ -60,14 +46,16 @@ func main() {
 			http.Dir(IMG_DIRECTORY))))
 	//.end
 
-	// File uploader
-	router.HandleFunc("/upload", FileUploadHandler).Methods("GET", "POST")
+	// Sessions
+	Sessions = AuthenticationMiddleware{File: fmt.Sprintf("%v/users.json", CONTENT_DIRECTORY)}
+	Sessions.Init()
+	router.HandleFunc("/login", Sessions.LoginHandler).Methods("GET", "POST")
+	router.HandleFunc("/logout", Sessions.LogoutHandler).Methods("GET")
 	//.end
 
-	auth := AuthenticationMiddleware{}
-	auth.Populate()
-	router.HandleFunc("/login", auth.LoginHandler).Methods("GET", "POST")
-	router.HandleFunc("/logout", auth.LogoutHandler).Methods("GET")
+	// File uploader
+	router.Handle("/upload", Sessions.RequireSession(http.HandlerFunc(FileUploadHandler))).Methods("GET", "POST")
+	//.end
 
 	// wiki engine
 	wiki := &WikiEngine{}
@@ -79,15 +67,16 @@ func main() {
 	router.PathPrefix("/").Handler(wiki)
 	//.end
 
-	router.Use(auth.Middleware)
+	router.Use(LoggingMiddleWare, SetHeadersMiddleWare, Sessions.Middleware)
 
 	// http.Handle("/static/", http.FileServer(http.Dir("static")))
 	// fs_static := http.FileServer(http.Dir("static"))
 	// static_route := fmt.Sprintf("/%v/", "static")
 	// http.Handle(static_route, http.StripPrefix(static_route, fs_static))
 
-	fmt.Printf("Magic happens on port %v...\n", PORT)
-	err = http.ListenAndServe(fmt.Sprintf(":%v", PORT), MiddleWare(router))
+	logger.Infof("Magic happens on port %v...", PORT)
+	// err = http.ListenAndServe(fmt.Sprintf(":%v", PORT), TrafficMiddleWare(router))
+	err = http.ListenAndServe(fmt.Sprintf(":%v", PORT), router)
 	if nil != err {
 		panic(err)
 	}

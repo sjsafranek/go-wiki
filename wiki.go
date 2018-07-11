@@ -122,10 +122,10 @@ func (self *WikiEngine) ViewHandler(w http.ResponseWriter, r *http.Request) {
 
 	p, err := self.loadPage(page)
 	if err != nil {
-		self.renderTemplate(w, HTML_TEMPLATE_NAME, &Page{Title: page, Sidebar: buildSideBar(), Session: HasSession(r)})
+		self.renderTemplate(w, HTML_TEMPLATE_NAME, &Page{Title: page, Sidebar: buildSideBar(), Session: Sessions.HasSession(r)})
 		return
 	}
-	p.Session = HasSession(r)
+	p.Session = Sessions.HasSession(r)
 	self.renderTemplate(w, HTML_TEMPLATE_NAME, p)
 }
 
