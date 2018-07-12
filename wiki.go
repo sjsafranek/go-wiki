@@ -115,9 +115,15 @@ func (self *WikiEngine) ViewHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, string(`{"status":"ok"}`))
 		return
 	} else if "DELETE" == r.Method {
-		// TODO
-		//  - delete page
-		logger.Critical("TODO")
+		err := self.deletePage(page)
+		if err != nil {
+			logger.Error(err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, string(`{"status":"ok"}`))
+		return
 	}
 
 	p, err := self.loadPage(page)
@@ -127,6 +133,13 @@ func (self *WikiEngine) ViewHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	p.Session = Sessions.HasSession(r)
 	self.renderTemplate(w, HTML_TEMPLATE_NAME, p)
+}
+
+func (self *WikiEngine) deletePage(page string) error {
+	// split file path into parts
+	path := fmt.Sprintf("%s/%s.md", WIKI_DIRECTORY, page)
+	// delete file
+	return os.Remove(path)
 }
 
 func (self *WikiEngine) savePage(page string, r *http.Request) error {

@@ -43,7 +43,7 @@
             float: right;
         }
 
-        #pageEditor, #savePage {
+        #editorPanel {
             display: none;
         }
 
@@ -284,8 +284,11 @@
         <!-- Page Content  -->
         <div id="content">
             <div>{{.Body}}</div>
-            <textarea id="pageEditor">{{.Raw}}</textarea>
-            <button id="savePage" class="btn btn-info">Submit</button>
+            <div id="editorPanel">
+                <textarea id="pageEditor">{{.Raw}}</textarea>
+                <button id="savePage" class="btn btn-info">Submit</button>
+                <button id="deletePage" class="btn btn-danger">Delete</button>
+            </div>
         </div>
     </div>
 
@@ -399,8 +402,7 @@
             $(".login").hide();
             $(".logout").show();
 
-			$('#pageEditor').show();
-			$('#savePage').show();
+			$('#editorPanel').show();
 
             // https://github.com/Ionaru/easy-markdown-editor
 			// https://github.com/sparksuite/simplemde-markdown-editor
@@ -409,7 +411,7 @@
 				spellChecker: false,
 			});
 
-			function savePage(){
+			$("#savePage").on('click', function(){
 				$.ajax({
                     method: "POST",
                     url: window.location.pathname,
@@ -419,17 +421,28 @@
     						return window.location.reload();
     					}
     					console.log(data);
-    				} //,
-                    // beforeSend: function(xhr) {
-                    //     xhr.setRequestHeader("X-Session-Token", SHA512("dev"))
-                    // }
+    				}
                 })
 				.fail(function(err){
 					console.log(err)
 				});
-			}
+            });
 
-			$("#savePage").on('click', savePage);
+            $("#deletePage").on('click', function(){
+                $.ajax({
+                    method: "DELETE",
+                    url: window.location.pathname,
+                    success: function(data){
+    					if (data.status && "ok" == data.status) {
+    						return window.location.reload();
+    					}
+    					console.log(data);
+    				}
+                })
+				.fail(function(err){
+					console.log(err)
+				});
+            });
 
 		} else {
             $(".login").show();
