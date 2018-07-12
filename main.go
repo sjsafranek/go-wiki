@@ -15,6 +15,7 @@ var users_file string
 
 func init() {
 	flag.IntVar(&PORT, "p", DEFAULT_PORT, "Server port")
+	flag.IntVar(&tcp_port, "tcp", DEFAULT_PORT, "TCP Server port")
 	flag.StringVar(&CONTENT_DIRECTORY, "C", DEFAULT_CONTENT_DIRECTORY, "Wiki content directory")
 	flag.StringVar(&HTML_TEMPLATE_FILE, "t", DEFAULT_HTML_TEMPLATE_FILE_FILE, "Html template")
 	// flag.StringVar(p, name, value, usage)
