@@ -104,26 +104,28 @@ func (self *WikiEngine) ViewHandler(w http.ResponseWriter, r *http.Request) {
 		page = "index"
 	}
 
-	if "POST" == r.Method {
-		err := self.savePage(page, r)
-		if err != nil {
-			logger.Error(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+	if Sessions.HasSession(r) {
+		if "POST" == r.Method {
+			err := self.savePage(page, r)
+			if err != nil {
+				logger.Error(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			fmt.Fprintf(w, string(`{"status":"ok"}`))
+			return
+		} else if "DELETE" == r.Method {
+			err := self.deletePage(page)
+			if err != nil {
+				logger.Error(err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			fmt.Fprintf(w, string(`{"status":"ok"}`))
 			return
 		}
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, string(`{"status":"ok"}`))
-		return
-	} else if "DELETE" == r.Method {
-		err := self.deletePage(page)
-		if err != nil {
-			logger.Error(err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		fmt.Fprintf(w, string(`{"status":"ok"}`))
-		return
 	}
 
 	p, err := self.loadPage(page)
