@@ -9,7 +9,7 @@ const (
 )
 
 var (
-	logger = ligneous.New().Log
+	logger = ligneous.NewLogger()
 	USERS  Users
 	PORT   int = DEFAULT_PORT
 )
