@@ -3,8 +3,8 @@ package main
 import (
 	"errors"
 
-	"./utils"
-	"./utils/jsonhelpers"
+	"github.com/sjsafranek/goutils/hashers"
+	"github.com/sjsafranek/goutils/jsonhelpers"
 )
 
 // User: user for wiki engine
@@ -15,12 +15,14 @@ type User struct {
 
 // SetPassword sets password
 func (self *User) SetPassword(password string) {
-	self.Password = utils.SHA512FromBytes([]byte(password))
+	// self.Password = hashers.SHA512FromBytes([]byte(password))
+	self.Password = hashers.Sha512HashString(password)
 }
 
 // IsPassword checks if password is the set password
 func (self *User) IsPassword(password string) bool {
-	return self.Password == utils.SHA512FromBytes([]byte(password))
+	// return self.Password == hashers.SHA512FromBytes([]byte(password))
+	return self.Password == hashers.Sha512HashString(password)
 }
 
 // Users: collection of users
